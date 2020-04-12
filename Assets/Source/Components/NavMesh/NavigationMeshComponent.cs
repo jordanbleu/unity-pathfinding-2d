@@ -24,10 +24,13 @@ namespace Assets.Source.Components.NavMesh
 
         private Node[][] nodes;
 
+        private Node nearestNodeTest; // todo: test, delete
+
         private void Start()
         {
             nodes = new Node[gridWidth][];
             GenerateNavigationMesh();
+            FindNearestNode(new Vector2(1.401f, -3.44f)); // todo: test, delete
         }
 
         // Generate the initial nav mesh
@@ -80,13 +83,17 @@ namespace Assets.Source.Components.NavMesh
                 {
                     for (var iy = 0; iy < nodes[0].Length; iy++) 
                     {
-                        Node node = nodes[ix][iy];
-
-                        if (node.IsSolid)
+                        var node = nodes[ix][iy];
+                        
+                        if (node == nearestNodeTest) 
+                        {
+                            Gizmos.color = Color.green;
+                        }
+                        else if (node.IsSolid)
                         {
                             Gizmos.color = Color.red;
                         }
-                        else 
+                        else
                         {
                             Gizmos.color = Color.grey;
                         }
@@ -95,6 +102,15 @@ namespace Assets.Source.Components.NavMesh
                     }                
                 }
             }
+        }
+
+        public Node FindNearestNode(Vector2 worldPosition) 
+        {
+            // Basically reverse the function to plot the grid square to figure out its index
+            var row = (int)Mathf.Clamp(Mathf.Round((worldPosition.x - transform.position.x) / tileSize), 0, gridWidth);
+            var col = (int)Mathf.Clamp(Mathf.Round((worldPosition.y - transform.position.y) / tileSize), 0, gridHeight);
+            nearestNodeTest = nodes[row][col];
+            return nodes[row][col];        
         }
     }
 }
