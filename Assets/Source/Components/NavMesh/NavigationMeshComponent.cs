@@ -33,7 +33,7 @@ namespace Assets.Source.Components.NavMesh
                 for (var iy = 0; iy < gridHeight; iy++)
                 {
                     var center = new Vector2(x: ix  * tileSize, y: iy * tileSize);
-                    var isSolid = CheckForSolids(center);
+                    var isSolid = TileContainsSolid(center);
 
                     nodes[ix][iy] = new Node(center, isSolid);
                 }
@@ -41,9 +41,9 @@ namespace Assets.Source.Components.NavMesh
         }
 
         // Returns true if any solid exists in a radius of 'tileSize' around the specified center position
-        private bool CheckForSolids(Vector2 center) 
+        private bool TileContainsSolid(Vector2 center) 
         {
-            return Physics2D.OverlapBox(center, new Vector2(tileSize,tileSize), 0f);
+            return Physics2D.OverlapBox(center, new Vector2(tileSize, tileSize), 0f) != null;
         }
 
         private void Update()
@@ -73,9 +73,7 @@ namespace Assets.Source.Components.NavMesh
                         Gizmos.DrawWireCube(node.Center + (Vector2)transform.position, new Vector2(tileSize*0.95f,tileSize*0.95f));
                     }                
                 }
-            
             }
-
         }
 
 
