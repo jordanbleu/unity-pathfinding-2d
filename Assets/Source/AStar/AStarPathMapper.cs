@@ -104,8 +104,8 @@ namespace Assets.Source.AStar
         // Find the linear distance between two indices in the node array
         private int GetDistance(Node node1, Node node2)
         {
-            var x = Mathf.Abs(node1.XIndex - node2.XIndex));
-            var y = Mathf.Abs(node2.YIndex - node2.YIndex));
+            var x = Mathf.Abs(node1.XIndex - node2.XIndex);
+            var y = Mathf.Abs(node2.YIndex - node2.YIndex);
             return x + y;
         }
 

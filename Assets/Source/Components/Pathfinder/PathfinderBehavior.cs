@@ -1,13 +1,63 @@
-﻿using System;
+﻿using Assets.Source.AStar;
+using Assets.Source.Components.NavMesh;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Source.Components.Pathfinder
 {
     public class PathfinderBehavior : MonoBehaviour
     {
+        [SerializeField]
+        private GameObject navigationMeshObject;
+
+        [SerializeField]
+        private LayerMask clickableLayers;
+        
+        private NavigationMeshComponent navigationMesh;
+        private AStarPathMapper pathMapper;
+
+        private List<Node> lastMappedPath;
+
+        private Vector3 destination;
+
+        private void Awake()
+        {
+            navigationMesh = navigationMeshObject?.GetComponent<NavigationMeshComponent>()
+                ?? throw new UnityException("Navigation mesh is missing required Navigation Mesh Component");
+
+            pathMapper = new AStarPathMapper(navigationMesh);
+        }
+
+        private void Update()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                Vector3 mouse = Input.mousePosition;
+                Ray castPoint = Camera.main.ScreenPointToRay(mouse);
+
+                destination = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+                
+            }
+
+            // Try moving solids around and checking out how the path updates
+            lastMappedPath = pathMapper.FindPath(transform.position, destination);
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.magenta;
+
+            if (lastMappedPath != null && lastMappedPath.Any()) 
+            {
+                foreach (Node node in lastMappedPath) 
+                {
+                    Gizmos.DrawWireSphere(node.Center, 0.2f);            
+                }          
+            }
+        }
+
+
     }
 }

@@ -92,8 +92,8 @@ namespace Assets.Source.Components.NavMesh
         public (int ix, int iy) FindNearestNodeIndex(Vector2 worldPosition)
         {
             // Basically reverse the function to plot the grid square to figure out its index
-            var row = (int)Mathf.Clamp(Mathf.Round((worldPosition.x - transform.position.x) / tileSize), 0, gridWidth);
-            var col = (int)Mathf.Clamp(Mathf.Round((worldPosition.y - transform.position.y) / tileSize), 0, gridHeight);
+            var row = (int)Mathf.Clamp(Mathf.Round((worldPosition.x - transform.position.x) / tileSize), 0, gridWidth-1);
+            var col = (int)Mathf.Clamp(Mathf.Round((worldPosition.y - transform.position.y) / tileSize), 0, gridHeight-1);
             return (row, col);
         }
 
