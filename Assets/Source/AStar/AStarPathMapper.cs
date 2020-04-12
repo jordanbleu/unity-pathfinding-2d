@@ -20,7 +20,7 @@ namespace Assets.Source.AStar
             this.navigationMesh = navMesh;
         }
 
-        public List<Node> FindPath(Vector2 startPosition, Vector2 targetPosition)  
+        public List<Node> FindPath(Vector2 startPosition, Vector2 targetPosition, bool allowDiagonalMovement = false)  
         {
             // Perform all pathing operations on a clone of currrent A* grid
             nodes = navigationMesh.CloneGrid();
@@ -32,7 +32,8 @@ namespace Assets.Source.AStar
             var startNodePosition =  navigationMesh.FindNearestNodeIndex(startPosition);
             var targetNodePosition = navigationMesh.FindNearestNodeIndex(targetPosition);
             var startNode = nodes[startNodePosition.ix][startNodePosition.iy];
-            var targetNode = nodes[targetNodePosition.ix][targetNodePosition.iy];
+            // For the target node, if the destination is a solid node, find the nearest non-solid neighbor node instead
+            var targetNode = FindNearestOpenNode(nodes[targetNodePosition.ix][targetNodePosition.iy]);
 
             // The "open list" is the list of nodes that we need to visit
             var openList = new List<Node>() { startNode };
@@ -68,8 +69,10 @@ namespace Assets.Source.AStar
                     return TraceFinalPath(startNode, targetNode);
                 }
 
+                var booty = FindNeighborNodes(currentNode, true).ToList();
 
-                foreach (Node neighbor in FindNeighborNodes(currentNode))
+
+                foreach (Node neighbor in FindNeighborNodes(currentNode, allowDiagonalMovement)) 
                 {
                     // Ignore any solid or previously visited nodes
                     if (neighbor.IsSolid || closedList.Contains(neighbor)) 
@@ -128,57 +131,79 @@ namespace Assets.Source.AStar
             return path;
         }
 
-        // Moderately sloppy way to grab the neighboring nodes. 
-        // todo: allow diagonals
-        private IEnumerable<Node> FindNeighborNodes(Node node)
+        private IEnumerable<Node> FindNeighborNodes(Node node, bool includeDiagonals = true)
         {
-            List<Node> neighbors = new List<Node>();
-            int checkX;
-            int checkY;
+            for (var ix = -1; ix < 2; ix++)
+            {
+                for (var iy = -1; iy < 2; iy++) 
+                {
+                    var nx = node.XIndex + ix;
+                    var ny = node.YIndex + iy;
 
-            //Check the right side of the current node.
-            checkX = node.XIndex + 1;
-            checkY = node.YIndex;
-            if (checkX >= 0 && checkX < gridWidth)//If the XPosition is in range of the array
-            {
-                if (checkY >= 0 && checkY < gridHeight)//If the YPosition is in range of the array
-                {
-                    neighbors.Add(nodes[checkX][checkY]);//Add the grid to the available neighbors list
+                    if (nx >= 0 && nx <= nodes.Length-1) 
+                    {
+                        if (ny >= 0 && ny <= nodes[nx].Length-1)
+                        {
+                            if (includeDiagonals)
+                            {
+                                // return all neighbor nodes who are not me 
+                                if (ix != 0 || iy != 0)
+                                { 
+                                    yield return nodes[nx][ny];
+                                }
+                            }
+                            else 
+                            {
+                                // Only return this node if it is not a diagonal
+                                // Diagonals are defined as coordinates relative to this current node
+                                // where the absolute value of both x and y index is non-zero
+                                if (Mathf.Abs(ix) == 0 || Mathf.Abs(iy) == 0)
+                                {
+                                    // return all nodes who are not me
+                                    if (ix != 0 || iy != 0)
+                                    {
+                                        yield return nodes[nx][ny];
+                                    }
+                                }                                
+                            }                            
+                        }                        
+                    }                    
+                    
                 }
-            }
-            //Check the Left side of the current node.
-            checkX = node.XIndex - 1;
-            checkY = node.YIndex;
-            if (checkX >= 0 && checkX < gridWidth)//If the XPosition is in range of the array
+            }         
+        }
+
+        // recursively seek out a valid non-solid node
+        private Node FindNearestOpenNode(Node node, Node originalNode = null, List<Node> visited = null)
+        {
+            if (!node.IsSolid)
             {
-                if (checkY >= 0 && checkY < gridHeight)//If the YPosition is in range of the array
-                {
-                    neighbors.Add(nodes[checkX][checkY]);//Add the grid to the available neighbors list
-                }
-            }
-            //Check the Top side of the current node.
-            checkX = node.XIndex;
-            checkY = node.YIndex + 1;
-            if (checkX >= 0 && checkX < gridWidth)//If the XPosition is in range of the array
-            {
-                if (checkY >= 0 && checkY < gridHeight)//If the YPosition is in range of the array
-                {
-                    neighbors.Add(nodes[checkX][checkY]);//Add the grid to the available neighbors list
-                }
-            }
-            //Check the Bottom side of the current node.
-            checkX = node.XIndex;
-            checkY = node.YIndex - 1;
-            if (checkX >= 0 && checkX < gridWidth)//If the XPosition is in range of the array
-            {
-                if (checkY >= 0 && checkY < gridHeight)//If the YPosition is in range of the array
-                {
-                    neighbors.Add(nodes[checkX][checkY]);//Add the grid to the available neighbors list
-                }
+                return node;
             }
 
-            return neighbors;//Return the neighbors list.
+            // If sourceNode is null, that means this is the first layer of recursion
+            var sourceNode = originalNode ?? node;
 
+            if (visited == null)
+            {
+                visited = new List<Node>();
+            }
+            visited.Add(node);
+
+            var neighbors = FindNeighborNodes(node, true)
+                            .Where(n => visited != null && !visited.Contains(n))
+                            .OrderBy(n=> GetDistance(n, sourceNode));
+
+            foreach (Node neighbor in neighbors) 
+            {
+                var firstNonSolidNode = FindNearestOpenNode(neighbor, sourceNode, visited);
+                if (firstNonSolidNode != null) 
+                {
+                    return firstNonSolidNode;
+                }                    
+            }
+            // searched all neighbors, found no solids 
+            return null;
         }
     }
 }

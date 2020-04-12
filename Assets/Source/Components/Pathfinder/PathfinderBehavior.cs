@@ -13,6 +13,9 @@ namespace Assets.Source.Components.Pathfinder
 
         [SerializeField]
         private LayerMask clickableLayers;
+
+        [SerializeField]
+        private bool canMoveDiagonally = false;
         
         private NavigationMeshComponent navigationMesh;
         private AStarPathMapper pathMapper;
@@ -23,6 +26,7 @@ namespace Assets.Source.Components.Pathfinder
 
         private void Awake()
         {
+            destination = new Vector3(0f, 0f, 0f);
             navigationMesh = navigationMeshObject?.GetComponent<NavigationMeshComponent>()
                 ?? throw new UnityException("Navigation mesh is missing required Navigation Mesh Component");
 
@@ -42,12 +46,12 @@ namespace Assets.Source.Components.Pathfinder
             }
 
             // Try moving solids around and checking out how the path updates
-            lastMappedPath = pathMapper.FindPath(transform.position, destination);
+            lastMappedPath = pathMapper.FindPath(transform.position, destination, canMoveDiagonally);
         }
 
         private void OnDrawGizmos()
         {
-            Gizmos.color = Color.magenta;
+            Gizmos.color = Color.yellow;
 
             if (lastMappedPath != null && lastMappedPath.Any()) 
             {
