@@ -1,4 +1,7 @@
 ﻿using Assets.Source.AStar;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Assets.Source.Components.NavMesh
@@ -8,10 +11,13 @@ namespace Assets.Source.Components.NavMesh
         [Tooltip("How many tiles going horizontally")]
         [SerializeField]
         private int gridWidth = 20;
+        public int GridWidth => gridWidth;
 
         [Tooltip("How many tiles going vertically")]
         [SerializeField]
         private int gridHeight = 15;
+        public int GridHeight => gridHeight;
+
 
         [Tooltip("The size of each tile in units.  Should be large enough for a pathfinder to pass through without clipping the edge of corners.")]
         [SerializeField]
@@ -41,7 +47,7 @@ namespace Assets.Source.Components.NavMesh
                     var center = new Vector2(x: (ix  * tileSize) + transform.position.x, y: (iy * tileSize) + transform.position.y);
                     var isSolid = TileContainsSolid(center);
 
-                    nodes[ix][iy] = new Node(center, isSolid);
+                    nodes[ix][iy] = new Node(center, ix, iy, isSolid);
                 }
             }            
         }
@@ -59,6 +65,13 @@ namespace Assets.Source.Components.NavMesh
             }
         }
 
+        /// <summary>
+        /// Used to clone the 2d array of nodes so we can modify them safely
+        /// </summary>
+        /// <returns></returns>
+        public Node[][] CloneGrid() => nodes.Select(n => n.ToArray()).ToArray();   
+        
+
         // For each tile, update its "isSolid" status.
         private void UpdateTiles() 
         {
@@ -70,6 +83,21 @@ namespace Assets.Source.Components.NavMesh
             }
         }
 
+        /// <summary>
+        /// Returns a tuple which contains the position of the nearest node.  If the specified position is beyond the boundaries 
+        /// of the navigation mesh, it will return the closest node it can get within the confines of the grid. 
+        /// </summary>
+        /// <param name="worldPosition">Position in world space </param>
+        /// <returns>x / y position of the node</returns>
+        public (int ix, int iy) FindNearestNodeIndex(Vector2 worldPosition)
+        {
+            // Basically reverse the function to plot the grid square to figure out its index
+            var row = (int)Mathf.Clamp(Mathf.Round((worldPosition.x - transform.position.x) / tileSize), 0, gridWidth-1);
+            var col = (int)Mathf.Clamp(Mathf.Round((worldPosition.y - transform.position.y) / tileSize), 0, gridHeight-1);
+            return (row, col);
+        }
+
+
         // todo: change to this line because otherwise that grid will get annoying 
         //private void OnDrawGizmosSelected()
         private void OnDrawGizmos()
@@ -80,13 +108,13 @@ namespace Assets.Source.Components.NavMesh
                 {
                     for (var iy = 0; iy < nodes[0].Length; iy++) 
                     {
-                        Node node = nodes[ix][iy];
-
+                        var node = nodes[ix][iy];
+                        
                         if (node.IsSolid)
                         {
                             Gizmos.color = Color.red;
                         }
-                        else 
+                        else
                         {
                             Gizmos.color = Color.grey;
                         }
