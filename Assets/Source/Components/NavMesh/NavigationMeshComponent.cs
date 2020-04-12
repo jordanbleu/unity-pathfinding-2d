@@ -5,17 +5,22 @@ namespace Assets.Source.Components.NavMesh
 {
     public class NavigationMeshComponent : MonoBehaviour
     {
-        // how many tiles going horizontally 
+        [Tooltip("How many tiles going horizontally")]
         [SerializeField]
         private int gridWidth = 20;
 
-        // how many tiles going vertically
+        [Tooltip("How many tiles going vertically")]
         [SerializeField]
         private int gridHeight = 15;
 
-        // how many unity "units" each tile should be
+        [Tooltip("The size of each tile in units.  Should be large enough for a pathfinder to pass through without clipping the edge of corners.")]
         [SerializeField]
         private float tileSize = 0.5f;
+
+        [Tooltip("Recalculates the entire navigation mesh every frame.  Leave this on if things in your level move around, " +
+            "or set to false if the level is static for a performance boost.")]
+        [SerializeField]
+        private bool syncEveryFrame = true;
 
         private Node[][] nodes;
 
@@ -25,6 +30,7 @@ namespace Assets.Source.Components.NavMesh
             GenerateNavigationMesh();
         }
 
+        // Generate the initial nav mesh
         private void GenerateNavigationMesh()
         {
             for (var ix = 0; ix < gridWidth; ix++)
@@ -41,25 +47,33 @@ namespace Assets.Source.Components.NavMesh
         }
 
         // Returns true if any solid exists in a radius of 'tileSize' around the specified center position
-        private bool TileContainsSolid(Vector2 center) 
-        {
-            //var collider = Physics2D.OverlapCollider()
-            //    //(center, new Vector2(tileSize/2, tileSize/2), 0f);
-
-            
-            var collider = Physics2D.OverlapArea(new Vector2(center.x - (tileSize / 2), center.y - (tileSize / 2)),
-                                                new Vector2(center.x + (tileSize / 2), center.y + (tileSize / 2)));
-            return collider != null;
-        }
+        private bool TileContainsSolid(Vector2 center) => Physics2D.OverlapArea(new Vector2(center.x - (tileSize / 2), center.y - (tileSize / 2)),
+                                                                                new Vector2(center.x + (tileSize / 2), center.y + (tileSize / 2))) !=null;   
+        
 
         private void Update()
         {
-
+            if (syncEveryFrame)
+            {
+                UpdateTiles();
+            }
         }
 
-        private void OnDrawGizmosSelected()
+        // For each tile, update its "isSolid" status.
+        private void UpdateTiles() 
         {
+            foreach (var nodeRow in nodes) {
+                foreach (var node in nodeRow)
+                {
+                    node.IsSolid = TileContainsSolid(node.Center);
+                }
+            }
+        }
 
+        // todo: change to this line because otherwise that grid will get annoying 
+        //private void OnDrawGizmosSelected()
+        private void OnDrawGizmos()
+        {
             if (nodes != null)
             {
                 for (var ix = 0; ix < nodes.Length; ix++)

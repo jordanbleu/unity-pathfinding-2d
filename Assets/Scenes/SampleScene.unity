@@ -236,6 +236,7 @@ MonoBehaviour:
   gridWidth: 35
   gridHeight: 19
   tileSize: 0.5
+  syncEveryFrame: 1
 --- !u!4 &961384929
 Transform:
   m_ObjectHideFlags: 0
