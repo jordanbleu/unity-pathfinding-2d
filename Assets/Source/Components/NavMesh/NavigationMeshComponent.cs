@@ -1,6 +1,4 @@
 ﻿using Assets.Source.AStar;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -75,10 +73,14 @@ namespace Assets.Source.Components.NavMesh
         // For each tile, update its "isSolid" status.
         private void UpdateTiles() 
         {
-            foreach (var nodeRow in nodes) {
-                foreach (var node in nodeRow)
+            if (nodes != null)
+            {
+                foreach (var nodeRow in nodes)
                 {
-                    node.IsSolid = TileContainsSolid(node.Center);
+                    foreach (var node in nodeRow)
+                    {
+                        node.IsSolid = TileContainsSolid(node.Center);
+                    }
                 }
             }
         }
