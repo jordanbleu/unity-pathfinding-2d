@@ -69,9 +69,6 @@ namespace Assets.Source.AStar
                     return TraceFinalPath(startNode, targetNode);
                 }
 
-                var booty = FindNeighborNodes(currentNode, true).ToList();
-
-
                 foreach (Node neighbor in FindNeighborNodes(currentNode, allowDiagonalMovement)) 
                 {
                     // Ignore any solid or previously visited nodes
