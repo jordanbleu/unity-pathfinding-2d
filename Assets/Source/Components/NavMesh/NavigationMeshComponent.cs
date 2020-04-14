@@ -111,7 +111,7 @@ namespace Assets.Source.Components.NavMesh
                     for (var iy = 0; iy < nodes[0].Length; iy++) 
                     {
                         var node = nodes[ix][iy];
-                        
+
                         if (node.IsSolid)
                         {
                             Gizmos.color = Color.red;
@@ -126,5 +126,6 @@ namespace Assets.Source.Components.NavMesh
                 }
             }
         }
+
     }
 }
