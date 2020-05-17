@@ -121,6 +121,7 @@ namespace Assets.Source.Components.NavMesh
                             Gizmos.color = Color.grey;
                         }
 
+                        GizmosUtils.GizmosUtils.DrawText(GUI.skin, node.ToString(), node.Center, fontSize: 8);
                         Gizmos.DrawWireCube(node.Center, new Vector2(tileSize*0.95f,tileSize*0.95f));
                     }                
                 }
